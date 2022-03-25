@@ -3,6 +3,8 @@ package com.example.xmltojson
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import com.example.xmltojson.Util.THUMB_END_BRACE
+import com.example.xmltojson.Util.THUMB_START_BRACE
 import fr.arnaudguyon.xmltojsonlib.XmlToJson
 import java.io.*
 import java.util.regex.Matcher
@@ -10,14 +12,15 @@ import java.util.regex.Pattern
 
 
 class MainActivity : AppCompatActivity() {
-
+    private lateinit var sdcard:String
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
 
         if(PermissionHelper.isReadStorageAllowed(this)) {
-            val sdcard = Util.getRootPath(this)
+             sdcard = Util.getRootPath(this)
 
 //            val assetManager: AssetManager = assets
 //            val inputStream: InputStream = assetManager.open("myFile.xml")
@@ -72,8 +75,14 @@ class MainActivity : AppCompatActivity() {
                 inputStream.close()
                 val formatted = xmlToJson.toFormattedString()
 
-                val filename = "($i)" + ".json"
-                val filePath = File(path, filename)
+                val tempPath = File(sdcard+"Converted/")
+                if(!tempPath.exists()){
+                    tempPath.mkdir()
+                }
+                val filename = "$i.json"
+                val filePath = File(tempPath, filename)
+                Log.e("filePath","$tempPath")
+
                 val gsonString: String = formatted
                 println(gsonString)
                 write(gsonString, filePath)

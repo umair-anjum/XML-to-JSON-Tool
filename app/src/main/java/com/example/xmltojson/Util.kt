@@ -7,6 +7,14 @@ import java.io.File
 
 object Util {
 
+    const val THUMB_START_BRACE = "("
+    const val THUMB_END_BRACE = ")"
+
+
+
+
+
+
     @Suppress("DEPRECATION")
     @JvmField
     val BASE_LOCAL_PATH = "${Environment.getExternalStorageDirectory().absolutePath}/JsonConverter/"

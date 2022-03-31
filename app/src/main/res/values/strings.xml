@@ -1,3 +1,10 @@
 <resources>
-    <string name="app_name">XML TO JSON</string>
+    <string name="app_name">CA Xib Tool</string>
+    <string name="todo">TODO</string>
+
+    <string-array name="assets_array">
+        <item>SVG</item>
+        <item>1x</item>
+        <item>PDF</item>
+    </string-array>
 </resources>

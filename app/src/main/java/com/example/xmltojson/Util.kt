@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.os.Build
 import android.os.Environment
-import com.developer.kalert.KAlertDialog
+import cn.pedant.SweetAlert.SweetAlertDialog
 import java.io.File
 
 
@@ -38,8 +38,8 @@ object Util {
         //  return BASE_LOCAL_PATH
     }
 
-    fun showLoaderDialog(mContext:Context,title:String) : KAlertDialog{
-        val pDialog = KAlertDialog(mContext, KAlertDialog.PROGRESS_TYPE)
+    fun showLoaderDialog(mContext:Context,title:String) : SweetAlertDialog{
+        val pDialog = SweetAlertDialog(mContext, SweetAlertDialog.PROGRESS_TYPE)
         pDialog.progressHelper.barColor = Color.parseColor("#A5DC86")
         pDialog.titleText = title
         pDialog.setCancelable(false)
@@ -47,18 +47,33 @@ object Util {
         return pDialog
     }
 
-    fun dismissLoaderDialog(pDialog:KAlertDialog){
+    fun dismissLoaderDialog(pDialog:SweetAlertDialog){
         if(pDialog.isShowing){
             pDialog.dismiss()
         }
     }
 
-    fun showErrorDialog(mContext:Context,title:String):KAlertDialog{
-        val pDialog = KAlertDialog(mContext, KAlertDialog.ERROR_TYPE)
-        pDialog.titleText = "Oops..."
+    fun showErrorDialog(mContext:Context,title:String): SweetAlertDialog {
+        val pDialog = SweetAlertDialog(mContext, SweetAlertDialog.ERROR_TYPE)
+        pDialog.titleText = "Oops!!"
         pDialog.contentText = title
-        pDialog  .show()
+        pDialog.show()
 
         return pDialog
+    }
+
+    fun warningDialog(mContext:Context,title:String){
+        SweetAlertDialog(mContext, SweetAlertDialog.WARNING_TYPE)
+            .setTitleText("Are you sure?")
+            .setContentText("Won't be able to recover this file!")
+            .setConfirmText("Yes,delete it!")
+            .show()
+    }
+
+    fun successDialog(mContext:Context,title:String){
+        SweetAlertDialog(mContext, SweetAlertDialog.SUCCESS_TYPE)
+            .setTitleText("Have Fun !!!!")
+            .setContentText(title)
+            .show()
     }
 }

@@ -3,11 +3,23 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Slack Downloads/XMLTOJSON/XMLTOJSON/app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="../../../Library/Android/sdk/platforms/android-30/data/res/layout/simple_spinner_item.xml" value="0.19610507246376813" />
+        <entry key="app/src/main/res/drawable/circle_primary.xml" value="0.123" />
+        <entry key="app/src/main/res/drawable/pro_image.xml" value="0.123" />
+        <entry key="app/src/main/res/drawable/shape_blue.xml" value="0.2085" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.25" />
+        <entry key="app/src/main/res/menu/spinner_menu.xml" value="0.29791666666666666" />
       </map>
     </option>
   </component>
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
+  </component>
+  <component name="VisualizationToolProject">
+    <option name="state">
+      <ProjectState>
+        <option name="scale" value="0.1" />
+      </ProjectState>
+    </option>
   </component>
 </project>

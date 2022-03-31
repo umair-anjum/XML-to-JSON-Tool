@@ -6,15 +6,225 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/start"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Let's start "
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/imageView"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_100sdp"
+                android:layout_marginStart="@dimen/_28sdp"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:layout_marginEnd="@dimen/_28sdp"
+                android:contentDescription="@string/todo"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@drawable/top_image" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/categoryName"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_32sdp"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:layout_marginEnd="@dimen/_32sdp"
+                android:hint="Enter Category Name"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/imageView">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/startIndex"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_32sdp"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:layout_marginEnd="@dimen/_32sdp"
+                android:hint="Start Index"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/categoryName">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="number" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:fontFamily="@font/gelion_semi_bold"
+                android:gravity="center"
+                android:text="Choose Assets Type"
+                android:textColor="@color/blackColor"
+                android:textSize="@dimen/_14sdp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/startIndex" />
+
+            <Spinner
+                android:id="@+id/assetsSpinner"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/todo"
+                android:minHeight="48dp"
+                app:layout_constraintEnd_toEndOf="@+id/textView"
+                app:layout_constraintStart_toStartOf="@+id/textView"
+                app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+            <Button
+                android:id="@+id/start"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:layout_marginStart="@dimen/_48sdp"
+                android:layout_marginTop="@dimen/_12sdp"
+                android:layout_marginEnd="@dimen/_48sdp"
+                android:background="@drawable/shape_blue"
+                android:fontFamily="@font/gelion_bold"
+                android:letterSpacing="0.1"
+                android:lineSpacingExtra="3dp"
+                android:text="Let's Start"
+                android:textColor="@color/white"
+                android:textSize="@dimen/_16sdp"
+                android:textStyle="normal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/startJsonIndex" />
+
+            <Button
+                android:id="@+id/reset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:fontFamily="@font/gelion_semi_bold"
+                android:text="Reset"
+                style="?attr/materialButtonOutlinedStyle"
+                android:textAllCaps="false"
+                android:textColor="@color/newPrimaryColor"
+                android:textSize="@dimen/_12sdp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/start" />
+
+            <CheckBox
+                android:id="@+id/thumbBrackets"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/_8sdp"
+                android:fontFamily="@font/gelion"
+                android:text="Include Thumbs ( Brackets )"
+                android:textColor="@color/blackColor"
+                android:textSize="@dimen/_12sdp"
+                app:layout_constraintEnd_toEndOf="@+id/textView"
+                app:layout_constraintStart_toStartOf="@+id/textView"
+                app:layout_constraintTop_toBottomOf="@+id/assetsSpinner" />
+
+            <CheckBox
+                android:id="@+id/startJsonIndex"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/gelion"
+                android:text="Start Json index from 0"
+                android:textColor="@color/blackColor"
+                android:textSize="@dimen/_12sdp"
+                app:layout_constraintEnd_toEndOf="@+id/thumbBrackets"
+                app:layout_constraintStart_toStartOf="@+id/thumbBrackets"
+                app:layout_constraintTop_toBottomOf="@+id/thumbBrackets" />
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginStart="@dimen/_32sdp"
+                android:layout_marginEnd="@dimen/_32sdp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/reset">
+                <TextView
+                    android:id="@+id/tttt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/gelion_bold"
+                    android:textColor="@color/blackColor"
+                    android:text="Key Points"
+                    android:textSize="@dimen/_14sdp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_10sdp"
+                        android:layout_height="@dimen/_10sdp"
+                        android:layout_marginTop="@dimen/_3sdp"
+                        android:background="@drawable/circle_primary"
+                        android:contentDescription="@string/todo" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_5sdp"
+                        android:fontFamily="@font/gelion"
+                        android:gravity="start"
+                        android:lineSpacingExtra="3dp"
+                        android:text="Make sure your thumbs renaming includes start &amp; end Braces"
+                        android:textSize="@dimen/_12sdp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_5sdp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="@dimen/_10sdp"
+                        android:layout_height="@dimen/_10sdp"
+                        android:layout_marginTop="@dimen/_3sdp"
+                        android:background="@drawable/circle_primary"
+                        android:contentDescription="@string/todo" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/_5sdp"
+                        android:fontFamily="@font/gelion"
+                        android:gravity="start"
+                        android:lineSpacingExtra="3dp"
+                        android:text="Make sure your category Json renaming starts from 0 or 1 accordingly"
+                        android:textSize="@dimen/_12sdp" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

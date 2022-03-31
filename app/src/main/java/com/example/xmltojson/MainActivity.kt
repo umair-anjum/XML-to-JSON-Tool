@@ -1,14 +1,15 @@
 package com.example.xmltojson
-
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.widget.Button
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
-import com.developer.kalert.KAlertDialog
+import cn.pedant.SweetAlert.SweetAlertDialog
 import com.example.xmltojson.Util.dismissLoaderDialog
 import com.example.xmltojson.Util.showErrorDialog
+import com.google.android.material.textfield.TextInputLayout
 import fr.arnaudguyon.xmltojsonlib.XmlToJson
 import java.io.*
 import java.nio.channels.FileChannel
@@ -16,33 +17,95 @@ import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
-
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
     private lateinit var sdcard: String
-    private lateinit var loaderDialog: KAlertDialog
+    private lateinit var loaderDialog: SweetAlertDialog
 
     private lateinit var start: Button
+    private lateinit var categoryName: TextInputLayout
+    private lateinit var startIndex: TextInputLayout
+    private lateinit var assetsSpinner: Spinner
+    private lateinit var thumbBrackets: CheckBox
+    private lateinit var startJsonIndex: CheckBox
+    private lateinit var reset: TextView
+
+    private var mStartIndex = 0
+    private var mCategoryName = ""
+    private var mAssetsFolder = ""
+    private var mThumbBrackets = false
+    private var mStartJsonIndex = 0
+
+    private var mFinalFolder = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        //
         start = findViewById(R.id.start)
+        categoryName = findViewById(R.id.categoryName)
+        assetsSpinner = findViewById(R.id.assetsSpinner)
+        startIndex = findViewById(R.id.startIndex)
+        thumbBrackets = findViewById(R.id.thumbBrackets)
+        startJsonIndex = findViewById(R.id.startJsonIndex)
+        reset = findViewById(R.id.reset)
+        //
+        assetsSpinner.onItemSelectedListener = this
+        sdcard = Util.getRootPath(this)
 
+        //
+        thumbBrackets.setOnCheckedChangeListener { _, isChecked ->
+            mThumbBrackets = isChecked
+        }
+        //
+        startJsonIndex.setOnCheckedChangeListener { _, isChecked ->
+            mStartJsonIndex = if (isChecked) {
+                1
+            } else {
+                0
+            }
+        }
+        //
+        reset.setOnClickListener {
+            categoryName.editText?.setText("")
+            startIndex.editText?.setText("")
+        }
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.assets_array,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            assetsSpinner.adapter = adapter
+        }
+        //
         start.setOnClickListener {
+            //
             if (PermissionHelper.isReadStorageAllowed(this)) {
-                sdcard = Util.getRootPath(this)
-                loaderDialog = Util.showLoaderDialog(this, "Converting Json")
+                if (categoryName.editText?.text.toString() != "") {
+                    mCategoryName = categoryName.editText?.text.toString()
+                    if (startIndex.editText?.text.toString() != "") {
+                        mStartIndex = startIndex.editText?.text.toString().toInt()
+                        //
+                        mFinalFolder = "$mCategoryName(Converted)"
+                        //
+                        loaderDialog = Util.showLoaderDialog(this, "Converting Json")
 
-                Handler(Looper.getMainLooper()).postDelayed({
-                    dismissLoaderDialog(loaderDialog)
-                }, 2000)
-                //To read and convert XiB
-                readXibFolder(sdcard + "/templates/")
-                //Copy assets
-                //  copyAssets(sdcard+"/templates/","SVG")
-                //Copy Thumbnails
-//            copyThumbnails(sdcard+"/thumbnails/",sdcard+"Converted/Thumbnails/")
+                        Handler(Looper.getMainLooper()).postDelayed({
+//                            //To read and convert XiB
+                            readXibFolder("$sdcard/$mCategoryName/templates/", mStartIndex)
+                        }, 5000)
+
+                    } else {
+                        showErrorDialog(this, "Please Enter Start Index")
+                    }
+                } else {
+                    showErrorDialog(this, "Please Enter Category Name")
+                }
+
             } else {
                 PermissionHelper.requestStoragePermission(
                     this,
@@ -55,23 +118,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun readXibFolder(path: String, startIndex: Int = 1) {
         val dir = File(path) //
-
+        Log.e("dir", "$dir")
         if (dir.exists()) {
             val totalNumFiles = dir.listFiles()!!.size
             val folders = dir.listFiles()!!
 
-//            Arrays.sort(folders, object : Comparator<File?> {
-//                override fun compare(o1: File?, o2: File?): Int {
-//                    if (o1!!.lastModified() < o2!!.lastModified()) return 1
-//                    return if (o1.lastModified() > o2.lastModified()) -1 else 0
-//                }
-//            })
+//            val otherStrings =
+//                arrayOf("LM_1", "LM_16", "LM_10", "LM_2", "LM_3", "LM_4", "LM_5", "LM_6")
+            Arrays.sort(folders, Comparator { o1, o2 ->
+                if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
+                val cmp = o1.name.length.compareTo(o2.name.length)
+                if (cmp != 0) cmp else o1.compareTo(o2)
+            })
+//            for (i in otherStrings.indices)
+//                Log.e("otherStrings", otherStrings[i])
 
             Log.e("totalNumFiles", "$totalNumFiles")
-            Log.e("totalNumFiles", "${folders[0].name}")
-            for (i in startIndex until totalNumFiles) {
+            Log.e("totalNumFiles", folders[0].name)
+            for (i in startIndex until totalNumFiles + 1) {
 
-                val folderName = folders[i].name
+                val folderName = folders[i - 1].name
                 Log.e("totalNumFiles", "file found $i  ---  folderName:  $folderName")
 
                 val pattern: Pattern = Pattern.compile(".*\\d.*")
@@ -86,15 +152,15 @@ class MainActivity : AppCompatActivity() {
                     inputStream.close()
                     val formatted = xmlToJson.toFormattedString()
 
-                    val mkConverted = File(sdcard + "Converted/")
-                    val tempPath = File(sdcard + "Converted/Json/")
+                    val mkConverted = File("$sdcard$mFinalFolder/")
+                    val tempPath = File("$sdcard$mFinalFolder/Json/")
                     if (!mkConverted.exists()) {
                         mkConverted.mkdir()
                         if (!tempPath.exists()) {
                             tempPath.mkdir()
                         }
                     }
-                    val filename = "$i.json"
+                    val filename = "${i - mStartJsonIndex}.json"
                     val filePath = File(tempPath, filename)
                     Log.e("filePath", "$filePath")
 
@@ -104,9 +170,14 @@ class MainActivity : AppCompatActivity() {
                 }
 
             }
-
+            //
+            dismissLoaderDialog(loaderDialog)
             //Copy assets
-            //  copyAssets(sdcard+"/templates/","SVG")
+            loaderDialog = Util.showLoaderDialog(this, "Coping Assets")
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                copyAssets("$sdcard/$mCategoryName/templates/", mAssetsFolder, mStartIndex)
+            }, 5000)
         } else {
             dismissLoaderDialog(loaderDialog)
             showErrorDialog(this, "Category Folder Not Found")
@@ -128,7 +199,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun copyAssets(path: String, assetsFolder: String, startIndex: Int = 1) {
         val dir = File(path) //
-
+        Log.e("assetsPath", "$dir")
         val totalNumFiles = dir.listFiles()!!.size
         val folders = dir.listFiles()!!
 
@@ -150,7 +221,7 @@ class MainActivity : AppCompatActivity() {
 
                     try {
                         val fileSrc = File("$file/$fileName/")
-                        val fileDest = File(sdcard + "Converted/Assets/")
+                        val fileDest = File("$sdcard$mFinalFolder/Assets/")
                         if (!fileDest.exists()) {
                             fileDest.mkdir()
                         }
@@ -164,6 +235,15 @@ class MainActivity : AppCompatActivity() {
 
             }
         }
+        dismissLoaderDialog(loaderDialog)
+        loaderDialog = Util.showLoaderDialog(this, "Coping Thumbnails")
+
+        copyThumbnails(
+            "$sdcard/$mCategoryName/thumbnails/",
+            "$sdcard$mFinalFolder/Thumbnails/",
+            mStartIndex
+        )
+
     }
 
     private fun copyFileOrDirectory(srcDir: String?, dstDir: String?) {
@@ -202,6 +282,7 @@ class MainActivity : AppCompatActivity() {
             source?.close()
             destination?.close()
         }
+
     }
 
     private fun copyThumbnails(path: String, copiedPath: String, startIndex: Int = 0) {
@@ -210,20 +291,26 @@ class MainActivity : AppCompatActivity() {
         val totalNumFiles = dir.listFiles()!!.size
         val folders = dir.listFiles()!!
 
+        //
+        Arrays.sort(folders, Comparator { o1, o2 ->
+            if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
+            val cmp = o1.name.length.compareTo(o2.name.length)
+            if (cmp != 0) cmp else o1.compareTo(o2)
+        })
         Log.e("totalNumFiles", "$totalNumFiles")
         Log.e("totalNumFiles", folders[0].name)
-        for (i in startIndex until totalNumFiles) {
-            val folderName = folders[i].name
+        for (i in startIndex until totalNumFiles + 1) {
+            val folderName = folders[i - 1].name
             val pattern: Pattern = Pattern.compile(".*\\d.*")
             val matcher: Matcher = pattern.matcher(folderName)
             if (matcher.find()) {
-                Log.e("totalNumFiles", "file found $i  ---  folderName:  $folderName")
+                Log.e("totalThumbnails", "file found ${i - 1}   ---  folderName:  $folderName")
 
                 val file = File(path, "$folderName/")
 
                 try {
                     val fileSrc = File("$file")
-                    val fileDest = File(sdcard + "Converted/Thumbnails/")
+                    val fileDest = File("$sdcard$mFinalFolder/Thumbnails/")
                     if (!fileDest.exists()) {
                         fileDest.mkdir()
                     }
@@ -235,91 +322,49 @@ class MainActivity : AppCompatActivity() {
                     e.printStackTrace()
                 }
 
-
-//                val files = file.listFiles()!!
-
-//                Log.e("totalNumAsset","${files.size}")
-//                for (element in files){
-//                    val fileName = element.name
-//
-//                }
-
-                //Copy Thumbnails
-//            copyThumbnails(sdcard+"/thumbnails/",sdcard+"Converted/Thumbnails/")
             }
         }
 
-        val totalFiles = File(copiedPath).listFiles()!!.size
-        val filesList = File(copiedPath).listFiles()!!
-        for (j in startIndex until totalFiles) {
-            val folderName = filesList[j].name
-            rename(File("$copiedPath$folderName"), File(copiedPath + "($j).png"))
-            Log.e("rename", "$copiedPath$folderName")
-            Log.e("rename", "${(copiedPath + "($j).png")}")
 
-        }
+        Handler(Looper.getMainLooper()).postDelayed({
+            val totalFiles = File(copiedPath).listFiles()!!.size
+            val filesList = File(copiedPath).listFiles()!!
+            //
+            Arrays.sort(filesList, Comparator { o1, o2 ->
+                if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
+                val cmp = o1.name.length.compareTo(o2.name.length)
+                if (cmp != 0) cmp else o1.compareTo(o2)
+            })
+            //
+            for (j in startIndex until totalFiles + 1) {
+                val folderName = filesList[j - 1].name
+                if(mThumbBrackets)
+                rename(File("$copiedPath$folderName"), File(copiedPath + "(${j}).png"))
+                else
+                rename(File("$copiedPath$folderName"), File(copiedPath + "${j}.png"))
+
+                Log.e("rename", "$copiedPath$folderName")
+//                Log.e("rename", "${(copiedPath + "($j).png")}")
+
+            }
+            dismissLoaderDialog(loaderDialog)
+            Util.successDialog(this@MainActivity,"Converted Successfully")
+        }, 5000)
+
     }
 
     private fun rename(from: File, to: File): Boolean {
         return from.exists() && from.renameTo(to)
     }
 
-    class WindowsExplorerComparator : Comparator<File?> {
-        override fun compare(o1: File?, o2: File?): Int {
-            val i1 = splitStringPreserveDelimiter(o1!!.name).iterator()
-            val i2 = splitStringPreserveDelimiter(o2!!.name).iterator()
-            while (true) {
-                //Til here all is equal.
-                if (!i1.hasNext() && !i2.hasNext()) {
-                    return 0
-                }
-                //first has no more parts -> comes first
-                if (!i1.hasNext() && i2.hasNext()) {
-                    return -1
-                }
-                //first has more parts than i2 -> comes after
-                if (i1.hasNext() && !i2.hasNext()) {
-                    return 1
-                }
-                val data1 = i1.next()
-                val data2 = i2.next()
-                var result: Int
-                try {
-                    //If both datas are numbers, then compare numbers
-                    result = java.lang.Long.compare(
-                        java.lang.Long.valueOf(data1),
-                        java.lang.Long.valueOf(data2)
-                    )
-                    //If numbers are equal than longer comes first
-                    if (result == 0) {
-                        result = -Integer.compare(data1.length, data2.length)
-                    }
-                } catch (ex: NumberFormatException) {
-                    //compare text case insensitive
-                    result = data1.compareTo(data2, ignoreCase = true)
-                }
-                if (result != 0) {
-                    return result
-                }
-            }
-        }
+    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+        val selectedItem = parent?.getItemAtPosition(position).toString()
+        mAssetsFolder = selectedItem
+        Log.e("mAssetsFolder", "mAssetsFolder: $mAssetsFolder")
+    }
 
-        private fun splitStringPreserveDelimiter(str: String): List<String> {
-            val matcher = splitPattern.matcher(str)
-            val list: MutableList<String> = ArrayList()
-            var pos = 0
-            while (matcher.find()) {
-                list.add(str.substring(pos, matcher.start()))
-                list.add(matcher.group())
-                pos = matcher.end()
-            }
-            list.add(str.substring(pos))
-            return list
-        }
-
-        companion object {
-            private val splitPattern = Pattern.compile("\\d+|\\.|\\s")
-        }
+    override fun onNothingSelected(parent: AdapterView<*>?) {
+        Log.e("mAssetsFolder", "onNothingSelected: $mAssetsFolder")
     }
 
 }

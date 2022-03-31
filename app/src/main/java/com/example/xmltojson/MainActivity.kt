@@ -1,4 +1,5 @@
 package com.example.xmltojson
+
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -9,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import cn.pedant.SweetAlert.SweetAlertDialog
 import com.example.xmltojson.Util.dismissLoaderDialog
 import com.example.xmltojson.Util.showErrorDialog
+import com.example.xmltojson.Util.showErrorDialogEx
 import com.google.android.material.textfield.TextInputLayout
 import fr.arnaudguyon.xmltojsonlib.XmlToJson
 import java.io.*
@@ -52,7 +54,6 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
         //
         assetsSpinner.onItemSelectedListener = this
         sdcard = Util.getRootPath(this)
-
         //
         thumbBrackets.setOnCheckedChangeListener { _, isChecked ->
             mThumbBrackets = isChecked
@@ -91,6 +92,10 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                         mStartIndex = startIndex.editText?.text.toString().toInt()
                         //
                         mFinalFolder = "$mCategoryName(Converted)"
+                        val savingDir = File(mFinalFolder)
+                        if(savingDir.exists()){
+                            savingDir.delete()
+                        }
                         //
                         loaderDialog = Util.showLoaderDialog(this, "Converting Json")
 
@@ -116,8 +121,10 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     }
 
+    var exception = false
     private fun readXibFolder(path: String, startIndex: Int = 1) {
         val dir = File(path) //
+        if(dir.exists()){
         Log.e("dir", "$dir")
         if (dir.exists()) {
             val totalNumFiles = dir.listFiles()!!.size
@@ -144,45 +151,68 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
                 val matcher: Matcher = pattern.matcher(folderName)
                 if (matcher.find()) {
 //                    Log.e("totalNumFiles", "file found $i  ---  folderName:  $folderName")
+                    try {
+                        val file = File(path, "$folderName/$folderName.xib")
+                        if (file.exists()) {
+                            val inputStream: InputStream = FileInputStream(file)
 
-                    val file = File(path, "$folderName/$folderName.xib")
-                    val inputStream: InputStream = FileInputStream(file)
+                            val xmlToJson = XmlToJson.Builder(inputStream, null).build()
+                            inputStream.close()
+                            val formatted = xmlToJson.toFormattedString()
 
-                    val xmlToJson = XmlToJson.Builder(inputStream, null).build()
-                    inputStream.close()
-                    val formatted = xmlToJson.toFormattedString()
+                            val mkConverted = File("$sdcard$mFinalFolder/")
+                            val tempPath = File("$sdcard$mFinalFolder/Json/")
+                            if (!mkConverted.exists()) {
+                                mkConverted.mkdir()
+                                if (!tempPath.exists()) {
+                                    tempPath.mkdir()
+                                }
+                            }
+                            val filename = "${i - mStartJsonIndex}.json"
+                            val filePath = File(tempPath, filename)
+                            Log.e("filePath", "$filePath")
 
-                    val mkConverted = File("$sdcard$mFinalFolder/")
-                    val tempPath = File("$sdcard$mFinalFolder/Json/")
-                    if (!mkConverted.exists()) {
-                        mkConverted.mkdir()
-                        if (!tempPath.exists()) {
-                            tempPath.mkdir()
+                            val gsonString: String = formatted
+                            println(gsonString)
+                            write(gsonString, filePath)
+                        } else {
+                            exception = true
+                            Log.e("missing", "Xib no. ($folderName) is missing")
+                            dismissLoaderDialog(loaderDialog)
+                            showErrorDialogEx(this@MainActivity, "Xib no. ($folderName) is missing")
                         }
+                    } catch (ex: Exception) {
+                        exception = true
+                        Log.e("xibEx", "Something went wrong..!!")
+                        dismissLoaderDialog(loaderDialog)
+                        showErrorDialog(this@MainActivity, "Something went wrong..!!")
                     }
-                    val filename = "${i - mStartJsonIndex}.json"
-                    val filePath = File(tempPath, filename)
-                    Log.e("filePath", "$filePath")
-
-                    val gsonString: String = formatted
-                    println(gsonString)
-                    write(gsonString, filePath)
                 }
 
             }
-            //
-            dismissLoaderDialog(loaderDialog)
-            //Copy assets
-            loaderDialog = Util.showLoaderDialog(this, "Coping Assets")
+            if (!exception) {
+                //
+                dismissLoaderDialog(loaderDialog)
+                //Copy assets
+                loaderDialog = Util.showLoaderDialog(this, "Coping Assets")
 
-            Handler(Looper.getMainLooper()).postDelayed({
-                copyAssets("$sdcard/$mCategoryName/templates/", mAssetsFolder, mStartIndex)
-            }, 5000)
+                Handler(Looper.getMainLooper()).postDelayed({
+                    copyAssets("$sdcard/$mCategoryName/templates/", mAssetsFolder, mStartIndex)
+                }, 5000)
+            } else {
+                dismissLoaderDialog(loaderDialog)
+            }
         } else {
             dismissLoaderDialog(loaderDialog)
             showErrorDialog(this, "Category Folder Not Found")
         }
 //
+        }
+        else {
+            Log.e("missing", "Templates folder not found..!!")
+            dismissLoaderDialog(loaderDialog)
+            showErrorDialogEx(this@MainActivity, "Templates folder not found..!!")
+        }
     }
 
     private fun write(data: String, path: File) {
@@ -199,6 +229,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private fun copyAssets(path: String, assetsFolder: String, startIndex: Int = 1) {
         val dir = File(path) //
+        if(dir.exists()){
         Log.e("assetsPath", "$dir")
         val totalNumFiles = dir.listFiles()!!.size
         val folders = dir.listFiles()!!
@@ -214,36 +245,52 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
                 val file = File(path, "$folderName/$assetsFolder/")
                 val files = file.listFiles()!!
+                if (files.isNotEmpty()) {
+                    Log.e("totalNumAsset", "${files.size}")
+                    for (element in files) {
+                        val fileName = element.name
 
-                Log.e("totalNumAsset", "${files.size}")
-                for (element in files) {
-                    val fileName = element.name
-
-                    try {
-                        val fileSrc = File("$file/$fileName/")
-                        val fileDest = File("$sdcard$mFinalFolder/Assets/")
-                        if (!fileDest.exists()) {
-                            fileDest.mkdir()
+                        try {
+                            val fileSrc = File("$file/$fileName/")
+                            val fileDest = File("$sdcard$mFinalFolder/Assets/")
+                            if (!fileDest.exists()) {
+                                fileDest.mkdir()
+                            }
+                            Log.e("fileSrc", "$fileSrc")
+                            Log.e("fileSrc", "$fileDest")
+                            copyFileOrDirectory(fileSrc.toString(), fileDest.toString())
+                        } catch (e: IOException) {
+                            exception = true
+                            Log.e("xibEx", "Something went wrong..!!")
+                            dismissLoaderDialog(loaderDialog)
+                            showErrorDialog(this@MainActivity, "Something went wrong..!!")
+                            e.printStackTrace()
                         }
-                        Log.e("fileSrc", "$fileSrc")
-                        Log.e("fileSrc", "$fileDest")
-                        copyFileOrDirectory(fileSrc.toString(), fileDest.toString())
-                    } catch (e: IOException) {
-                        e.printStackTrace()
                     }
+                } else {
+                    exception = true
+                    Log.e("missing", "Assets missing in  ($folderName) folder")
+                    dismissLoaderDialog(loaderDialog)
+                    showErrorDialogEx(this@MainActivity, "Assets missing in  ($folderName) folder")
                 }
-
             }
         }
-        dismissLoaderDialog(loaderDialog)
-        loaderDialog = Util.showLoaderDialog(this, "Coping Thumbnails")
+        if (!exception) {
+            dismissLoaderDialog(loaderDialog)
+            loaderDialog = Util.showLoaderDialog(this, "Coping Thumbnails")
 
-        copyThumbnails(
-            "$sdcard/$mCategoryName/thumbnails/",
-            "$sdcard$mFinalFolder/Thumbnails/",
-            mStartIndex
-        )
-
+            copyThumbnails(
+                "$sdcard/$mCategoryName/thumbnails/",
+                "$sdcard$mFinalFolder/Thumbnails/",
+                mStartIndex
+            )
+        }
+        }
+        else {
+            Log.e("missing", "Templates folder not found..!!")
+            dismissLoaderDialog(loaderDialog)
+            showErrorDialogEx(this@MainActivity, "Templates folder not found..!!")
+        }
     }
 
     private fun copyFileOrDirectory(srcDir: String?, dstDir: String?) {
@@ -287,70 +334,75 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     private fun copyThumbnails(path: String, copiedPath: String, startIndex: Int = 0) {
         val dir = File(path) //
+        if(dir.exists()) {
+            val totalNumFiles = dir.listFiles()!!.size
+            val folders = dir.listFiles()!!
 
-        val totalNumFiles = dir.listFiles()!!.size
-        val folders = dir.listFiles()!!
-
-        //
-        Arrays.sort(folders, Comparator { o1, o2 ->
-            if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
-            val cmp = o1.name.length.compareTo(o2.name.length)
-            if (cmp != 0) cmp else o1.compareTo(o2)
-        })
-        Log.e("totalNumFiles", "$totalNumFiles")
-        Log.e("totalNumFiles", folders[0].name)
-        for (i in startIndex until totalNumFiles + 1) {
-            val folderName = folders[i - 1].name
-            val pattern: Pattern = Pattern.compile(".*\\d.*")
-            val matcher: Matcher = pattern.matcher(folderName)
-            if (matcher.find()) {
-                Log.e("totalThumbnails", "file found ${i - 1}   ---  folderName:  $folderName")
-
-                val file = File(path, "$folderName/")
-
-                try {
-                    val fileSrc = File("$file")
-                    val fileDest = File("$sdcard$mFinalFolder/Thumbnails/")
-                    if (!fileDest.exists()) {
-                        fileDest.mkdir()
-                    }
-                    Log.e("fileSrc", "$fileSrc")
-                    Log.e("fileSrc", "$fileDest")
-                    copyFileOrDirectory(fileSrc.toString(), fileDest.toString())
-
-                } catch (e: IOException) {
-                    e.printStackTrace()
-                }
-
-            }
-        }
-
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            val totalFiles = File(copiedPath).listFiles()!!.size
-            val filesList = File(copiedPath).listFiles()!!
             //
-            Arrays.sort(filesList, Comparator { o1, o2 ->
+            Arrays.sort(folders, Comparator { o1, o2 ->
                 if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
                 val cmp = o1.name.length.compareTo(o2.name.length)
                 if (cmp != 0) cmp else o1.compareTo(o2)
             })
-            //
-            for (j in startIndex until totalFiles + 1) {
-                val folderName = filesList[j - 1].name
-                if(mThumbBrackets)
-                rename(File("$copiedPath$folderName"), File(copiedPath + "(${j}).png"))
-                else
-                rename(File("$copiedPath$folderName"), File(copiedPath + "${j}.png"))
+            Log.e("totalNumFiles", "$totalNumFiles")
+            Log.e("totalNumFiles", folders[0].name)
+            for (i in startIndex until totalNumFiles + 1) {
+                val folderName = folders[i - 1].name
+                val pattern: Pattern = Pattern.compile(".*\\d.*")
+                val matcher: Matcher = pattern.matcher(folderName)
+                if (matcher.find()) {
+                    Log.e("totalThumbnails", "file found ${i - 1}   ---  folderName:  $folderName")
 
-                Log.e("rename", "$copiedPath$folderName")
+                    val file = File(path, "$folderName/")
+
+                    try {
+                        val fileSrc = File("$file")
+                        val fileDest = File("$sdcard$mFinalFolder/Thumbnails/")
+                        if (!fileDest.exists()) {
+                            fileDest.mkdir()
+                        }
+                        Log.e("fileSrc", "$fileSrc")
+                        Log.e("fileSrc", "$fileDest")
+                        copyFileOrDirectory(fileSrc.toString(), fileDest.toString())
+
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+
+                }
+            }
+
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                val totalFiles = File(copiedPath).listFiles()!!.size
+                val filesList = File(copiedPath).listFiles()!!
+                //
+                Arrays.sort(filesList, Comparator { o1, o2 ->
+                    if (o1 == null) return@Comparator -1 else if (o2 == null) return@Comparator 1
+                    val cmp = o1.name.length.compareTo(o2.name.length)
+                    if (cmp != 0) cmp else o1.compareTo(o2)
+                })
+                //
+                for (j in startIndex until totalFiles + 1) {
+                    val folderName = filesList[j - 1].name
+                    if (mThumbBrackets)
+                        rename(File("$copiedPath$folderName"), File(copiedPath + "(${j}).png"))
+                    else
+                        rename(File("$copiedPath$folderName"), File(copiedPath + "${j}.png"))
+
+                    Log.e("rename", "$copiedPath$folderName")
 //                Log.e("rename", "${(copiedPath + "($j).png")}")
 
-            }
+                }
+                dismissLoaderDialog(loaderDialog)
+                Util.successDialog(this@MainActivity, "Converted Successfully")
+            }, 5000)
+        }
+        else {
+            Log.e("missing", "Thumbs folder not found..!!")
             dismissLoaderDialog(loaderDialog)
-            Util.successDialog(this@MainActivity,"Converted Successfully")
-        }, 5000)
-
+            showErrorDialogEx(this@MainActivity, "Thumbs folder not found..!!")
+        }
     }
 
     private fun rename(from: File, to: File): Boolean {

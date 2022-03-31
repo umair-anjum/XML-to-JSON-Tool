@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Environment
 import cn.pedant.SweetAlert.SweetAlertDialog
+import cn.pedant.SweetAlert.SweetAlertDialog.OnSweetClickListener
 import java.io.File
 
 
@@ -16,13 +17,13 @@ object Util {
 
     @Suppress("DEPRECATION")
     @JvmField
-    val BASE_LOCAL_PATH = "${Environment.getExternalStorageDirectory().absolutePath}/JsonConverter/"
+    val BASE_LOCAL_PATH = "${Environment.getExternalStorageDirectory().absolutePath}/XibTool/"
 
     @JvmStatic
     fun getRootPath(context: Context): String {
         var root: String? = null
         root = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            context.getExternalFilesDir("JsonConverter")?.absolutePath + "/"
+            context.getExternalFilesDir("XibTool")?.absolutePath + "/"
         } else {
             BASE_LOCAL_PATH
         }
@@ -56,6 +57,21 @@ object Util {
     fun showErrorDialog(mContext:Context,title:String): SweetAlertDialog {
         val pDialog = SweetAlertDialog(mContext, SweetAlertDialog.ERROR_TYPE)
         pDialog.titleText = "Oops!!"
+        pDialog.contentText = title
+        pDialog.show()
+
+        return pDialog
+    }
+    fun showErrorDialogEx(mContext:Context,title:String): SweetAlertDialog {
+        val pDialog = SweetAlertDialog(mContext, SweetAlertDialog.ERROR_TYPE)
+        pDialog.titleText = "Oops!!"
+        pDialog.confirmText = "Ok"
+//        pDialog.setCancelClickListener { sDialog ->
+//            sDialog.dismissWithAnimation()
+//        }
+        pDialog.setConfirmClickListener { sDialog ->
+            sDialog.dismissWithAnimation()
+        }
         pDialog.contentText = title
         pDialog.show()
 

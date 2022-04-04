@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity(), AdapterView.OnItemSelectedListener {
 
     }
 
-    var exception = false
+    private var exception = false
     private fun readXibFolder(path: String, startIndex: Int = 1) {
         val dir = File(path) //
         if(dir.exists()){

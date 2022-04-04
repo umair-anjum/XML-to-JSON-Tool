@@ -106,7 +106,6 @@ object PermissionHelper {
     }
 }
 
-
 interface PermissionCallBacks {
     fun onPermission(requestCode: Int, granted: Boolean)
 }
